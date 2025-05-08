@@ -167,7 +167,8 @@ def mvp_weights(cov_matrix: np.ndarray) -> np.ndarray:
     :return: The weight of the assets.
     """
     cov_inv = _cov_inv(cov_matrix)
-    return cov_inv @ np.ones(cov_inv.shape[0]) / (np.ones(cov_inv.shape[0]) @ cov_inv @ np.ones(cov_inv.shape[0]))
+    C = _C(cov_inv)
+    return cov_inv @ np.ones(cov_inv.shape[0]) / C
 
 
 def mvp_weights_using_returns(returns: np.ndarray) -> np.ndarray:
@@ -179,56 +180,5 @@ def mvp_weights_using_returns(returns: np.ndarray) -> np.ndarray:
     :return: The weight of the assets.
     """
     cov = _cov(returns)
-    cov_inv = _cov_inv(cov)
-    return mvp_weights(cov_inv)
-
-
-def _test() -> None:
-    """
-    Quick test the core module.
-    """
-    # Generate random returns
-    np.random.seed(0)
-    returns = np.random.rand(1000, 5)
-
-    # Calculate the mean and covariance matrix
-    mu = _mu(returns)
-    cov_matrix = _cov(returns)
-    cov_inv = _cov_inv(cov_matrix)
-
-    # Calculate A, B, C, D
-    A = _A(mu, cov_inv)
-    B = _B(mu, cov_inv)
-    C = _C(cov_inv)
-    D = _D(A, B, C)
-
-    # Calculate g and h
-    g = _g(A, B, D, mu, cov_inv)
-    h = _h(A, C, D, mu, cov_inv)
-
-    # Calculate the weight for a target return of 0.1
-    target_return = 0.1
-    weight = _optimal_weights(target_return, g, h)
-    weight_from_mu_cov = optimal_weights(target_return, mu, cov_matrix)
-    weight_from_returns = optimal_weights_using_returns(target_return, returns)
-
-    # Calculate the weight for the minimum variance portfolio
-    weight_mvp = mvp_weights(cov_inv)
-    weight_mvp_from_returns = mvp_weights_using_returns(returns)
-
-
-    print("Weight for target return:", weight)
-    print("Weight from mu and cov:", weight_from_mu_cov)
-    print("Weight from returns:", weight_from_returns)
-
-    print("Weight for minimum variance portfolio:", weight_mvp)
-    print("Weight for minimum variance portfolio from returns:", weight_mvp_from_returns)
-
-
-if __name__ == "__main__":
-    from time import perf_counter
-    start = perf_counter()
-    _test()
-    end = perf_counter()
-    print(f"Test time: {end - start:.4f} seconds")
+    return mvp_weights(cov)
 
